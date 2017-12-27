@@ -115,9 +115,9 @@ static bool check_for_delayed_trigger(struct idletimer_tg *timer,
 	return state;
 }
 
-static void notify_netlink_uevent(const char *label, struct idletimer_tg *timer)
+static void notify_netlink_uevent(const char *iface, struct idletimer_tg *timer)
 {
-	char label_msg[NLMSG_MAX_SIZE];
+	char iface_msg[NLMSG_MAX_SIZE];
 	char state_msg[NLMSG_MAX_SIZE];
 	char timestamp_msg[NLMSG_MAX_SIZE];
 	char uid_msg[NLMSG_MAX_SIZE];
@@ -127,8 +127,8 @@ static void notify_netlink_uevent(const char *label, struct idletimer_tg *timer)
 	uint64_t time_ns;
 	bool state;
 
-	res = snprintf(label_msg, NLMSG_MAX_SIZE, "LABEL=%s",
-		       label);
+	res = snprintf(iface_msg, NLMSG_MAX_SIZE, "INTERFACE=%s",
+		       iface);
 	if (NLMSG_MAX_SIZE <= res) {
 		pr_err("message too long (%d)", res);
 		return;
@@ -201,7 +201,7 @@ static ssize_t idletimer_tg_show(struct kobject *kobj, struct attribute *attr,
 		return sprintf(buf, "%u\n",
 			       jiffies_to_msecs(expires - now) / 1000);
 
-	if (timer && timer->send_nl_msg)
+	if (timer->send_nl_msg)
 		return sprintf(buf, "0 %d\n",
 			jiffies_to_msecs(now - expires) / 1000);
 	else
@@ -383,14 +383,22 @@ static unsigned int idletimer_tg_target(struct sk_buff *skb,
 				const struct xt_action_param *par)
 {
 	const struct idletimer_tg_info *info = par->targinfo;
+	unsigned long now = jiffies;
 
 	pr_debug("resetting timer %s, timeout period %u\n",
 		 info->label, info->timeout);
 
 	BUG_ON(!info->timer);
 
-	/* TODO: Avoid modifying timers on each packet */
+	info->timer->active = true;
 
+	if (time_before(info->timer->timer.expires, now)) {
+		schedule_work(&info->timer->work);
+		pr_debug("Starting timer %s (Expired, Jiffies): %lu, %lu\n",
+			 info->label, info->timer->timer.expires, now);
+	}
+
+	/* TODO: Avoid modifying timers on each packet */
 	reset_timer(info, skb);
 	return XT_CONTINUE;
 }
