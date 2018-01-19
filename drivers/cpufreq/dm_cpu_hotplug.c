@@ -445,7 +445,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 			goto blk_out;
 
 		if (cmd == CMD_SLEEP_PREPARE) {
-			for (i = max_num_cpu - 1; i >= NR_CA7; i--) {
+			for (i = setup_max_cpus - 1; i >= NR_CA7; i--) {
 				if (cpu_online(i)) {
 					ret = cpu_down(i);
 					if (ret)
@@ -460,7 +460,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 				}
 			}
 		}else if (cmd == CMD_BIG_OUT && !in_low_power_mode) {
-			for (i = max_num_cpu - 1; i >= NR_CA7; i--) {
+			for (i = setup_max_cpus - 1; i >= NR_CA7; i--) {
 				if (cpu_online(i)) {
 					ret = cpu_down(i);
 					if (ret)
@@ -483,7 +483,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 				if (little_hotplug_in)
 					hotplug_out_limit = NR_CA7 - 2;
 
-				for (i = max_num_cpu - 1; i > hotplug_out_limit; i--) {
+				for (i = setup_max_cpus - 1; i > hotplug_out_limit; i--) {
 					if (cpu_online(i)) {
 						ret = cpu_down(i);
 						if (ret)
@@ -500,7 +500,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 			if (in_low_power_mode)
 				goto blk_out;
 
-			for (i = NR_CA7; i < max_num_cpu; i++) {
+			for (i = NR_CA7; i < setup_max_cpus; i++) {
 				if (!cpu_online(i)) {
 					ret = cpu_up(i);
 					if (ret)
@@ -527,7 +527,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 				}
 			} else {
 				if (lcd_is_on) {
-					for (i = NR_CA7; i < max_num_cpu; i++) {
+					for (i = NR_CA7; i < setup_max_cpus; i++) {
 						if (do_hotplug_out)
 							goto blk_out;
 
@@ -549,7 +549,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 						}
 					}
 				} else {
-					for (i = 1; i < max_num_cpu; i++) {
+					for (i = 1; i < setup_max_cpus; i++) {
 						if (do_hotplug_out && i >= NR_CA7)
 							goto blk_out;
 
@@ -568,7 +568,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 		if (do_disable_hotplug)
 			goto blk_out;
 
-		for (i = max_num_cpu - 1; i > 0; i--) {
+		for (i = setup_max_cpus - 1; i > 0; i--) {
 			if (cpu_online(i)) {
 				ret = cpu_down(i);
 				if (ret)
@@ -579,7 +579,7 @@ static int __ref __cpu_hotplug(bool out_flag, enum hotplug_cmd cmd)
 		if (in_suspend_prepared)
 			goto blk_out;
 
-		for (i = 1; i < max_num_cpu; i++) {
+		for (i = 1; i < setup_max_cpus; i++) {
 			if (!cpu_online(i)) {
 				ret = cpu_up(i);
 				if (ret)
